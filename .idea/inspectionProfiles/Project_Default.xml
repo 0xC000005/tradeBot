@@ -1,0 +1,43 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="readability_optimization.visulize_optimization.*" />
+          <option value="cugraph" />
+          <option value="cudf" />
+          <option value="readability_optimization.clean_weakly_connected_components.graph_tool" />
+          <option value="NetworkX" />
+          <option value="readability_optimization.blackbox.scipy" />
+          <option value="list.__truediv__" />
+          <option value="readability_test.csv2dot.graph_tool" />
+          <option value="plot_test.csv2graph.graph_tool" />
+          <option value="readability_test.cuGraph2dot.graph_tool" />
+          <option value="plot_test.cuGraph_plot.graph_tool" />
+          <option value="runtime_test.cuGraph_test.graph_tool" />
+          <option value="cpuinfo" />
+          <option value="psutil" />
+          <option value="runtime_test.graph_tool_test.graph_tool" />
+          <option value="readability_test.graph_tool2dot.graph_tool" />
+          <option value="hardware_utilization_test.graph_tool_1.graph_tool" />
+          <option value="hardware_utilization_test.graph_tool_2.graph_tool" />
+          <option value="sample_graphs.graph_tool_network_generation.graph_tool" />
+          <option value="readability_optimization.graph_tool_to_pos_list.graph_tool" />
+          <option value="readability_test.graph_viewer2dot.graph_tool" />
+          <option value="sample_graphs.graphml2csv.cls" />
+          <option value="cuGraph_jupyter_notebooks.graphml2csv.cls" />
+          <option value="igraph" />
+          <option value="pyintergraph" />
+          <option value="readability_test.iGraph2dot.graph_tool" />
+          <option value="snap" />
+          <option value="readability_optimization.pos_to_readability_score.graph_tool" />
+          <option value="readability_optimization.pos_list_to_graph.graph_tool" />
+          <option value="trensorflow" />
+          <option value="torch" />
+          <option value="readability_optimization.optimizer.scipy" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
