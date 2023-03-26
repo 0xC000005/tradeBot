@@ -1,5 +1,5 @@
 # TradeBot: Apple Trading Strategy Comparison
-My dad couldn't stop bragging about how he can out-trade everybody so I decide to **quantitatively** slap his face by building this instead of caching up my 5 weeks worth of ECE259.
+My dad wouldn't stop bragging about how he can out-trade everybody so I decide to **quantitatively** slap his face by building this instead of caching up my 5 weeks worth of ECE259.
 This repository contains a set of Python scripts that implement and compare different trading strategies for Apple Inc. (AAPL) stock. The main purpose of this project is to explore various trading algorithms and evaluate their performance against a buy-and-hold strategy in the S&P 500 index.
 
 ## Table of Contents
