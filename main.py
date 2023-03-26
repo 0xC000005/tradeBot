@@ -1,4 +1,4 @@
-import numpy as np
+# Import necessary libraries
 import yfinance as yf
 import matplotlib.pyplot as plt
 import talib
@@ -34,9 +34,15 @@ sp500_entry_price = None
 sp500_exit_price = None
 sp500_total_profit = 0
 
+# Add columns to store daily profit
+apple_data['DailyProfit'] = 0
+apple_data['Volume_shifted'] = apple_data['Volume'].shift(1)
+sp500_data['DailyProfit'] = 0
 
-# Define function to execute trades based on the strategy
-def execute_trade(row, in_trade, entry_price, exit_price, total_profit, MA10, RSI, MACD):
+
+def execute_trade_A(row, in_trade, entry_price, exit_price, total_profit, MA10, RSI, MACD):
+    daily_profit = 0
+
     if row["Close"] > MA10 and not in_trade and RSI < 70 and MACD > 0:
         # Enter trade
         in_trade = True
@@ -47,60 +53,118 @@ def execute_trade(row, in_trade, entry_price, exit_price, total_profit, MA10, RS
         exit_price = row["Close"]
         profit = exit_price - entry_price
         total_profit += profit
-    elif entry_price is not None and ((exit_price is None and abs(row["Close"] - entry_price) / entry_price > 0.02) or (
-            exit_price is not None and (exit_price - entry_price) / entry_price <= 0.02)):
+        daily_profit = profit
+    elif entry_price is not None and ((exit_price is None and abs(row["Close"] - entry_price) / entry_price > 0.02) or (exit_price is not None and (exit_price - entry_price) / entry_price <= 0.02)):
+        # Implement stop-loss or take-profit
+        in_trade = False
+        exit_price = row["Close"];
+        profit = exit_price - entry_price
+        total_profit += profit
+        daily_profit = profit
+    elif entry_price is not None and row.name.time() >= datetime.time(15, 30) and row.name.time() <= datetime.time(16, 0):
+        # Sell if buying volume is less than selling volume in the last half hour before market close and price is
+        # above the 10-day moving average
+        if row["Volume"] < row["Volume_shifted"] and row["Close"] > MA10:
+            in_trade = False
+            exit_price = row["Close"]
+            profit = exit_price - entry_price
+            total_profit += profit
+            daily_profit = profit
+        else:
+            # Exit trade if condition not met
+            in_trade = False
+            exit_price = None
+
+    return in_trade, entry_price, exit_price, total_profit, daily_profit
+
+
+
+def execute_trade_B(row, in_trade, entry_price, exit_price, total_profit, MA10, RSI, MACD):
+    daily_profit = 0
+
+    if row["Close"] > MA10 and not in_trade and RSI < 70 and MACD > 0:
+        # Enter trade
+        in_trade = True
+        entry_price = row["Close"]
+    elif row["Close"] < MA10 and in_trade:
+        # Exit trade
+        in_trade = False
+        exit_price = row["Close"]
+        profit = exit_price - entry_price
+        total_profit += profit
+        daily_profit = profit / entry_price
+    return in_trade, entry_price, exit_price, total_profit, daily_profit
+
+
+def execute_trade_C(row, in_trade, entry_price, exit_price, total_profit, MA10, RSI, MACD):
+    daily_profit = 0
+
+    if row["Close"] > MA10 and not in_trade and RSI < 70 and MACD > 0:
+        # Enter trade
+        in_trade = True
+        entry_price = row["Close"]
+    elif row["Close"] < MA10 and in_trade:
+        # Exit trade
+        in_trade = False
+        exit_price = row["Close"]
+        profit = exit_price - entry_price
+        total_profit += profit
+        daily_profit = profit / entry_price
+    elif entry_price is not None and ((exit_price is None and abs(row["Close"] - entry_price) / entry_price > 0.02) or (exit_price is not None and (exit_price - entry_price) / entry_price <= 0.02)):
         # Implement stop-loss or take-profit
         in_trade = False
         exit_price = row["Close"]
         profit = exit_price - entry_price
         total_profit += profit
-    elif entry_price is not None and row.name.time() >= datetime.time(15, 30) and row.name.time() <= datetime.time(16, 0):
-        # Sell if buying volume is less than selling volume in the last half hour before market close and price is
-        # above the 10-day moving average
-        if row["Volume"] < apple_data["Volume"].iloc[i - 1] and row["Close"] > MA10:
-            in_trade = False
-            exit_price = row["Close"]
-            profit = exit_price - entry_price
-            total_profit += profit
-        else:
-            # Exit trade if condition not met
-            in_trade = False
-            exit_price = None
-    return in_trade, entry_price, exit_price, total_profit
+        daily_profit = profit / entry_price
+
+    return in_trade, entry_price, exit_price, total_profit, daily_profit
 
 
-# Execute trades for each row in the data for Apple
-for i, row in apple_data.iterrows():
-    apple_in_trade, apple_entry_price, apple_exit_price, apple_total_profit = execute_trade(row, apple_in_trade, apple_entry_price, apple_exit_price, apple_total_profit, row["MA10"], row["RSI"], row["MACD"])
+def test_multiple_strategies(execute_trade_functions, labels=None):
+    if labels is None:
+        labels = [f"Strategy {i}" for i in range(1, len(execute_trade_functions) + 1)]
 
-# Buy S&P500 at the beginning and hold until the end
-sp500_entry_price = sp500_data["Close"][0]
-sp500_exit_price = sp500_data["Close"][-1]
-sp500_total_profit = sp500_exit_price - sp500_entry_price
+    # Initialize variables for tracking trades and profits
+    profits = []
+    for execute_trade_function, label in zip(execute_trade_functions, labels):
+        apple_in_trade = False
+        apple_entry_price = None
+        apple_exit_price = None
+        apple_total_profit = 0
+        apple_data['DailyProfit'] = 0
 
-# Calculate total return for Apple stock and S&P500
-apple_return = (apple_data["Close"][-1] - apple_data["Close"][0]) / apple_data["Close"][0]
-sp500_return = (sp500_data["Close"][-1] - sp500_data["Close"][0]) / sp500_data["Close"][0]
+        for i, row in apple_data.iterrows():
+            apple_in_trade, apple_entry_price, apple_exit_price, apple_total_profit, daily_profit = execute_trade_function(row, apple_in_trade, apple_entry_price, apple_exit_price, apple_total_profit, row["MA10"], row["RSI"], row["MACD"])
+            if daily_profit != 0:
+                apple_data.at[i, 'DailyProfit'] = daily_profit / apple_entry_price
+            else:
+                apple_data.at[i, 'DailyProfit'] = 0
 
-# Calculate cumulative profit for Apple and S&P500
-apple_cumulative_profit = apple_total_profit / apple_data["Close"][0]
-sp500_cumulative_profit = sp500_total_profit / sp500_data["Close"][0]
+        profits.append((1 + apple_data["DailyProfit"]).cumprod() - 1)
 
-# Create a plot of the profits for the two strategies
-plt.plot(apple_data.index, apple_cumulative_profit, label="Apple Strategy")
-plt.plot(sp500_data.index, sp500_cumulative_profit * np.ones_like(sp500_data["Close"]), label="S&P500")
-plt.legend()
-plt.xlabel("Date")
-plt.ylabel("Normalized Profit Percentage")
-plt.title("Comparison of Apple Trading Strategy vs Investing in S&P500")
-plt.show()
+    sp500_data['DailyProfit'] = sp500_data['Close'].pct_change()
+    sp500_profit = (1 + sp500_data["DailyProfit"]).cumprod() - 1
 
-# Print the total return and profit for both strategies
-print("Apple Profit: {:.2%}".format(apple_cumulative_profit))
-print("S&P500 Profit: {:.2%}".format(sp500_cumulative_profit))
+    plt.figure(figsize=(10, 6))
+    for profit, label in zip(profits, labels):
+        plt.plot(apple_data.index, profit, label=label)
+    plt.plot(sp500_data.index, sp500_profit, label="S&P 500")
+    plt.legend()
+    plt.xlabel("Date")
+    plt.ylabel("Cumulative Profit Percentage")
+    plt.title("Comparison of Apple Trading Strategies vs Investing in S&P 500")
+    plt.show()
 
+    for i, (profit, label) in enumerate(zip(profits, labels)):
+        final_profit = profit.iloc[-1]
+        print(f"{label} Profit: {final_profit:.2%}")
 
+    sp500_final_profit = sp500_profit.iloc[-1]
+    print(f"S&P 500 Profit: {sp500_final_profit:.2%}")
 
 
 if __name__ == '__main__':
+    test_multiple_strategies([execute_trade_A, execute_trade_B, execute_trade_C], labels=["Strategy A", "Strategy B", "Strategy C"])
     pass
+
