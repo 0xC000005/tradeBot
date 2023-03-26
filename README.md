@@ -82,6 +82,50 @@ We welcome contributions to improve the existing strategies or to add new ones. 
 
 4. Create a pull request with a clear description of your changes.
 
+## Creating Your Own Trading Strategy
+
+To create your own trading strategy, you need to follow the input and output format requirements. Your custom trading strategy should be implemented as a Python function, which will be used as input to the `compare_strategies` function. Here is a guide on how to create your own trading strategy function:
+
+### Input Format
+
+Your custom trading strategy function should accept the following input parameters:
+
+1. `row`: A Pandas DataFrame row containing the stock data for a specific date, including columns such as 'Open', 'Close', 'High', 'Low', 'Volume', and any additional technical indicators you may want to use.
+2. `in_trade`: A boolean value that indicates whether the trade is currently active.
+3. `entry_price`: A float representing the entry price of the trade. If no trade is active, this value should be `None`.
+4. `exit_price`: A float representing the exit price of the trade. If no trade is active, this value should be `None`.
+5. `total_profit`: A float representing the total profit accumulated up to the current row.
+6. Any additional parameters representing technical indicators or other data relevant to your trading strategy (e.g., `MA10`, `RSI`, `MACD`).
+
+### Output Format
+
+Your custom trading strategy function should return the following values:
+
+1. `in_trade`: An updated boolean value representing whether the trade is active after the current row.
+2. `entry_price`: An updated float representing the entry price of the trade, if a new trade has been initiated. If no trade is active, this value should be `None`.
+3. `exit_price`: An updated float representing the exit price of the trade, if a trade has been closed. If no trade is active, this value should be `None`.
+4. `total_profit`: An updated float representing the total profit accumulated up to the current row, including any profit or loss from trades executed on the current row.
+5. `daily_profit`: A float representing the profit or loss from trades executed on the current row. If no trade has been executed on the current row, this value should be 0.
+
+### Example
+
+Below is an example of a custom trading strategy function:
+
+```python
+def custom_trading_strategy(row, in_trade, entry_price, exit_price, total_profit, MA10, RSI, MACD):
+    daily_profit = 0
+
+    # Implement your custom trading logic here.
+    # You can use the input parameters and any additional indicators as needed.
+
+    return in_trade, entry_price, exit_price, total_profit, daily_profit
+```
+Once your custom trading strategy function is implemented, you can use it as input to the compare_strategies function, along with any other strategies you'd like to compare:
+```angular2html
+compare_strategies(apple_data, sp500_data, [custom_trading_strategy, execute_trade_A])
+```
+
+
 ## License
 
 This project is released under the MIT License. See the [LICENSE](LICENSE) file for more details.
